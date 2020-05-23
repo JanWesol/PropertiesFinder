@@ -226,7 +226,7 @@ namespace Application
                     {
                         temp = RawDescription.Remove(0, RawDescription.IndexOf("ul. ") + 4);
                         int min = temp.IndexOf(" ");
-                        if(min > temp.IndexOf(".") && temp.IndexOf(".") > 0)
+                        if(min < 0 || (min > temp.IndexOf(".") && temp.IndexOf(".") > 0))
                         {
                             min = temp.IndexOf(".");
                         }
