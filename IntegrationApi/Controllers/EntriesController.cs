@@ -10,7 +10,7 @@ using Models;
 
 namespace IntegrationApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class EntriesController : ControllerBase
     {
@@ -23,30 +23,46 @@ namespace IntegrationApi.Controllers
 
         // GET: api/Entries
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Entry>>> GetEntries()
+        public IActionResult GetEntries()
         {
-            return await _context.Entries.ToListAsync();
+            var entry = _context.Entries
+                .Include(e => e.OfferDetails)
+                    .ThenInclude(od => od.SellerContact)
+                .Include(e => e.PropertyAddress)
+                .Include(e => e.PropertyDetails)
+                .Include(e => e.PropertyPrice)
+                .Include(e => e.PropertyFeatures);
+
+            return Ok(entry.ToList());
         }
 
         // GET: api/Entries/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Entry>> GetEntry(int id)
+        public IActionResult GetEntry(int id)
         {
-            var entry = await _context.Entries.FindAsync(id);
+            var entry = _context.Entries
+                .Include(e => e.OfferDetails)
+                    .ThenInclude(od => od.SellerContact)
+                .Include(e => e.PropertyAddress)
+                .Include(e => e.PropertyDetails)
+                .Include(e => e.PropertyPrice)
+                .Include(e => e.PropertyFeatures)
+                .Where(e => e.ID == id)
+                .FirstOrDefault();
 
             if (entry == null)
             {
                 return NotFound();
             }
 
-            return entry;
+            return Ok(entry);
         }
 
         // PUT: api/Entries/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEntry(int id, Entry entry)
+        public IActionResult PutEntry(int id, Entry entry)
         {
             if (id != entry.ID)
             {
@@ -55,22 +71,8 @@ namespace IntegrationApi.Controllers
 
             _context.Entry(entry).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EntryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            _context.Entries.Update(entry);
+            _context.SaveChanges();
             return NoContent();
         }
 
@@ -78,29 +80,34 @@ namespace IntegrationApi.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Entry>> PostEntry(Entry entry)
+        public IActionResult PostEntry(Entry entry)
         {
             _context.Entries.Add(entry);
-            await _context.SaveChangesAsync();
-
-            //return CreatedAtAction("GetEntry", new { id = entry.ID }, entry);
+            _context.SaveChanges();
             return CreatedAtAction(nameof(GetEntry), new { id = entry.ID }, entry);
         }
 
         // DELETE: api/Entries/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Entry>> DeleteEntry(int id)
+        public IActionResult DeleteEntry(int id)
         {
-            var entry = await _context.Entries.FindAsync(id);
+            var entry = _context.Entries
+                .Include(e => e.OfferDetails)
+                    .ThenInclude(od => od.SellerContact)
+                .Include(e => e.PropertyAddress)
+                .Include(e => e.PropertyDetails)
+                .Include(e => e.PropertyPrice)
+                .Include(e => e.PropertyFeatures)
+                .Where(e => e.ID == id)
+                .FirstOrDefault();
             if (entry == null)
             {
                 return NotFound();
             }
 
             _context.Entries.Remove(entry);
-            await _context.SaveChangesAsync();
-
-            return entry;
+            _context.SaveChanges();
+            return Ok(entry);
         }
 
         private bool EntryExists(int id)
