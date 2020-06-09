@@ -23,7 +23,7 @@ namespace IntegrationApi.Controllers
 
         // GET: api/Entries
         [HttpGet]
-        public IActionResult GetEntries()
+        public IActionResult GetEntries([FromQuery(Name = "PageLimit")] int? PageLimit, [FromQuery(Name = "PageId")] int? PageId)
         {
             var entry = _context.Entries
                 .Include(e => e.OfferDetails)
@@ -33,7 +33,16 @@ namespace IntegrationApi.Controllers
                 .Include(e => e.PropertyPrice)
                 .Include(e => e.PropertyFeatures);
 
-            return Ok(entry.ToList());
+            if(PageLimit != null && PageId != null)
+            {
+                PageId--;
+                var temp = entry.Skip((int)PageId * (int)PageLimit).Take((int)PageLimit).ToList());
+                return Ok(temp);
+            }
+            else
+            {
+                return Ok(entry.ToList());
+            }
         }
 
         // GET: api/Entries/5
